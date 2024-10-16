@@ -10,6 +10,6 @@ Optionally, there is a separate semantic model for implementing polymetric polym
 
 References:
 
-[1] https://www3.nd.edu/ dchiang/teaching/pl/2022/f.html
+[1] https://www3.nd.edu/dchiang/teaching/pl/2022/f.html
 
-[2] https://www.cs.utexas.edu/ bornholt/courses/cs345h-24sp/lectures/8-system-f/
+[2] https://www.cs.utexas.edu/bornholt/courses/cs345h-24sp/lectures/8-system-f/
