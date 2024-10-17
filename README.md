@@ -6,7 +6,7 @@ Have two parts to this assignment
 The first part is 'dependent.py' which should be a close implementation of the semantic model for implementing Dependent Types
 Can run this code by cloning the repository and running 'python dependent.py' locally.
 
-Optionally, there is a separate semantic model for implementing polymetric polymorphism, and the corresponding type set as a PDF.
+Unrelated to the dependently typed assignment, but there is included a separate semantic model for implementing polymetric polymorphism using STLC and the corresponding type set as a PDF.
 
 References:
 
