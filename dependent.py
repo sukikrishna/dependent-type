@@ -42,10 +42,11 @@ class Succ:
 @dataclass
 class ElimNat:
     motive: 'Expr'
-    zero_case: 'Expr'
-    succ_case: 'Expr'
+    base: 'Expr'
+    inductive: 'Expr'
     target: 'Expr'
 
+# Can have expressions that are made up of any of these types (previously defined)
 Expr = Union[Var, Star, Pi, Lam, App, Nat, Zero, Succ, ElimNat]
 
 # Environment
@@ -70,10 +71,14 @@ def free_vars(expr: Expr) -> set:
             return set()
         case Succ(e):
             return free_vars(e)
-        case ElimNat(motive, zero_case, succ_case, target):
-            return free_vars(motive) | free_vars(zero_case) | free_vars(succ_case) | free_vars(target)
+        case ElimNat(motive, base, inductive, target):
+            return free_vars(motive) | free_vars(base) | free_vars(inductive) | free_vars(target)
 
 # Substitution
+
+# Checks if variable substituted inside an expression is same as bound variable of the lambda term.
+# If they match then won't substitute to avoid capturing the free variable
+
 def subst(var: str, replacement: Expr, target: Expr) -> Expr:
     match target:
         case Var(name):
@@ -96,11 +101,11 @@ def subst(var: str, replacement: Expr, target: Expr) -> Expr:
             return target
         case Succ(e):
             return Succ(subst(var, replacement, e))
-        case ElimNat(motive, zero_case, succ_case, target):
+        case ElimNat(motive, base, inductive, target):
             return ElimNat(
                 subst(var, replacement, motive),
-                subst(var, replacement, zero_case),
-                subst(var, replacement, succ_case),
+                subst(var, replacement, base),
+                subst(var, replacement, inductive),
                 subst(var, replacement, target)
             )
 
@@ -138,14 +143,14 @@ def eval_step(expr: Expr) -> Optional[Expr]:
             new_e = eval_step(e)
             if new_e:
                 return Succ(new_e)
-        case ElimNat(motive, zero_case, succ_case, Zero()):
-            return zero_case
-        case ElimNat(motive, zero_case, succ_case, Succ(n)):
-            return App(App(succ_case, n), ElimNat(motive, zero_case, succ_case, n))
-        case ElimNat(motive, zero_case, succ_case, target):
+        case ElimNat(motive, base, inductive, Zero()):
+            return base
+        case ElimNat(motive, base, inductive, Succ(n)):
+            return App(App(inductive, n), ElimNat(motive, base, inductive, n))
+        case ElimNat(motive, base, inductive, target):
             new_target = eval_step(target)
             if new_target:
-                return ElimNat(motive, zero_case, succ_case, new_target)
+                return ElimNat(motive, base, inductive, new_target)
     return None
 
 def eval_complete(expr: Expr) -> Expr:
@@ -155,7 +160,7 @@ def eval_complete(expr: Expr) -> Expr:
             return expr
         expr = new_expr
 
-# Type Checker
+# Type Checking
 def type_check(env: Env, expr: Expr) -> Expr:
     match expr:
         case Var(name):
@@ -191,18 +196,18 @@ def type_check(env: Env, expr: Expr) -> Expr:
             if eval_expr(type_check(env, e)) != Nat():
                 raise TypeError("Argument of Succ must have type Nat")
             return Nat()
-        case ElimNat(motive, zero_case, succ_case, target):
+        case ElimNat(motive, base, inductive, target):
             if eval_expr(type_check(env, target)) != Nat():
                 raise TypeError("Target of ElimNat must have type Nat")
             motive_type = eval_expr(type_check(env, motive))
             if not isinstance(motive_type, Pi) or motive_type.domain != Nat() or motive_type.codomain != Star():
                 raise TypeError("Motive of ElimNat must have type (n : Nat) -> Star")
-            zero_case_type = eval_expr(type_check(env, zero_case))
-            if not eval_expr(zero_case_type) == eval_expr(App(motive, Zero())):
+            base_type = eval_expr(type_check(env, base))
+            if not eval_expr(base_type) == eval_expr(App(motive, Zero())):
                 raise TypeError("Zero case of ElimNat has incorrect type")
-            expected_succ_case_type = Pi("n", Nat(), Pi("ih", App(motive, Var("n")), App(motive, Succ(Var("n")))))
-            succ_case_type = eval_expr(type_check(env, succ_case))
-            if not eval_expr(succ_case_type) == eval_expr(expected_succ_case_type):
+            expected_inductive_type = Pi("n", Nat(), Pi("ih", App(motive, Var("n")), App(motive, Succ(Var("n")))))
+            inductive_type = eval_expr(type_check(env, inductive))
+            if not eval_expr(inductive_type) == eval_expr(expected_inductive_type):
                 raise TypeError("Succ case of ElimNat has incorrect type")
             return eval_expr(App(motive, target))
         
@@ -220,9 +225,9 @@ def int_to_nat(n: int) -> Expr:
         return Zero()
     return Succ(int_to_nat(n - 1))
 
-# Example: Proving commutativity of addition
+# Example for testing the semantic model: Proving commutativity of addition
 def prove_add_comm():
-    # Define addition
+    # addition
     add = Lam("a", Nat(),
               Lam("b", Nat(),
                   ElimNat(Lam("_", Nat(), Nat()),
@@ -232,7 +237,7 @@ def prove_add_comm():
                                   Succ(Var("rec")))),
                           Var("a"))))
 
-    # Define the commutativity property
+    # commutativity property
     comm_prop = Pi("a", Nat(),
                    Pi("b", Nat(),
                       Pi("_", App(App(add, Var("a")), Var("b")),
