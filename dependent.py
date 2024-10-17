@@ -226,9 +226,40 @@ def int_to_nat(n: int) -> Expr:
     return Succ(int_to_nat(n - 1))
 
 # Example for testing the semantic model: Proving commutativity of addition
-def prove_add_comm():
-    # addition
-    add = Lam("a", Nat(),
+# def prove_add_comm():
+#     # addition
+#     add = Lam("a", Nat(),
+#               Lam("b", Nat(),
+#                   ElimNat(Lam("_", Nat(), Nat()),
+#                           Var("b"),
+#                           Lam("_", Nat(),
+#                               Lam("rec", Nat(),
+#                                   Succ(Var("rec")))),
+#                           Var("a"))))
+
+#     # commutativity property
+#     comm_prop = Pi("a", Nat(),
+#                    Pi("b", Nat(),
+#                       Pi("_", App(App(add, Var("a")), Var("b")),
+#                          App(App(add, Var("b")), Var("a")))))
+
+#     # Proving the commutativity for the example 2 + 3 = 3 + 2 is True
+#     a, b = 2, 3
+#     result1 = eval_complete(App(App(add, int_to_nat(a)), int_to_nat(b)))
+#     result2 = eval_complete(App(App(add, int_to_nat(b)), int_to_nat(a)))
+
+#     print(f"Proving {a} + {b} = {b} + {a}:")
+#     print(f"{a} + {b} = {nat_to_int(result1)}")
+#     print(f"{b} + {a} = {nat_to_int(result2)}")
+#     print(f"Commutativity holds for {a} and {b}: {result1 == result2}")
+
+# prove_add_comm()
+
+
+
+print("----------------")
+
+add = Lam("a", Nat(),
               Lam("b", Nat(),
                   ElimNat(Lam("_", Nat(), Nat()),
                           Var("b"),
@@ -237,20 +268,43 @@ def prove_add_comm():
                                   Succ(Var("rec")))),
                           Var("a"))))
 
-    # commutativity property
-    comm_prop = Pi("a", Nat(),
-                   Pi("b", Nat(),
-                      Pi("_", App(App(add, Var("a")), Var("b")),
-                         App(App(add, Var("b")), Var("a")))))
+# Following the above format to test some basic arithmetic operations
+mult = Lam("a", Nat(),
+           Lam("b", Nat(),
+               ElimNat(Lam("_", Nat(), Nat()),
+                       Zero(),
+                       Lam("_", Nat(),
+                           Lam("rec", Nat(),
+                               App(App(add, Var("b")), Var("rec")))),
+                       Var("a"))))
 
-    # Proving the commutativity for the example 2 + 3 = 3 + 2 is True
-    a, b = 2, 3
+factorial = Lam("n", Nat(),
+                ElimNat(Lam("_", Nat(), Nat()),
+                        Succ(Zero()),  # 1
+                        Lam("k", Nat(),
+                            Lam("rec", Nat(),
+                                App(App(mult, Succ(Var("k"))), Var("rec")))),
+                        Var("n")))
+
+def test_examples():
+    print("Testing multiplication and factorial arithmetic operations:")
+    a, b, c = 3, 4, 2
+    print(f"{a} + {b} = {nat_to_int(eval_complete(App(App(add, int_to_nat(a)), int_to_nat(b))))}")
+    print(f"{a} * {b} = {nat_to_int(eval_complete(App(App(mult, int_to_nat(a)), int_to_nat(b))))}")
+    print(f"{a}! = {nat_to_int(eval_complete(App(factorial, int_to_nat(a))))}")
+
+    print("Testing commutativity of addition:")
     result1 = eval_complete(App(App(add, int_to_nat(a)), int_to_nat(b)))
     result2 = eval_complete(App(App(add, int_to_nat(b)), int_to_nat(a)))
-
-    print(f"Proving {a} + {b} = {b} + {a}:")
     print(f"{a} + {b} = {nat_to_int(result1)}")
     print(f"{b} + {a} = {nat_to_int(result2)}")
-    print(f"Commutativity holds for {a} and {b}: {result1 == result2}")
+    print(f"{a} + {b} = {b} + {a}: {result1 == result2}")
 
-prove_add_comm()
+    print("Testing associativity of multiplication:")
+    result1 = eval_complete(App(App(mult, int_to_nat(a)), App(App(mult, int_to_nat(b)), int_to_nat(c))))
+    result2 = eval_complete(App(App(mult, App(App(mult, int_to_nat(a)), int_to_nat(b))), int_to_nat(c)))
+    print(f"{a} * {b} = {nat_to_int(result1)}")
+    print(f"{b} * {a} = {nat_to_int(result2)}")
+    print(f"({a} * {b}) * {c} = {a} * ({b} * {c}): {result1 == result2}")
+
+test_examples()
