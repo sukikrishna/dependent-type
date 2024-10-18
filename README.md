@@ -3,7 +3,7 @@ For CS2520R Assignment 1
 
 Have two parts to this assignment
 
-The first part is 'dependent.py' which should be a close implementation of the semantic model for implementing Dependent Types and has examples testing commutative property for addition and associative property for multiplication [3]. The only problem is that this implementation is pretty much relying on string comparisons with lambda expressions that have different bound variable names even though they are alpha-equivalent, so this is not being explicitly addressed. Attempted to address this using De Bruijn indices (dependent_index.py) to replace variable names with natural numbers that represent the number of binders between the variable's occurrence and its binding site, however, the example at the end of the script fails.
+The first part is 'dependent.py' which is the implementation of the semantic model (or at the very least a close implementation of the semantic model) for implementing Dependent Types with capture-avoiding substitution and has examples testing commutative property for addition and associative property for multiplication [3]. Also attempted to address alpha-equivalence using De Bruijn indices (dependent_index.py) to replace variable names with natural numbers that represent the number of binders between the variable's occurrence and its binding site, however, it doesn't really work and the example at the end of the script fails.
 
 Can run this code by cloning the repository, cd into the repository folder, and running 'python dependent.py' locally.
 
